@@ -81,15 +81,23 @@
       letter-spacing: .04em;
       text-transform: uppercase;
     }
-    .topbar-badge {
-      background: var(--orange);
-      color: white;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 20px;
-      letter-spacing: .03em;
-    }
+    .sheet-btn {
+  background: transparent;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(255,255,255,.35);
+  text-decoration: none;
+  letter-spacing: .02em;
+  transition: background .15s, border-color .15s;
+  white-space: nowrap;
+}
+.sheet-btn:hover {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.7);
+}
 
     /* ── Page header ────────────────────────────────── */
     .page-header {
@@ -384,7 +392,7 @@
       .col-span-2, .col-span-3 { grid-column: span 1; }
       .card-body { padding: 16px; }
       .submit-wrap { flex-direction: column; align-items: stretch; }
-      .topbar-badge { display: none; }
+      .sheet-btn { font-size: 11px; padding: 6px 10px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -401,7 +409,11 @@
     <div class="topbar-divider"></div>
     <span class="topbar-title">BHDC Downtime Tracker</span>
   </div>
-  <span class="topbar-badge">Log Entry</span>
+  
+  <a href="https://docs.google.com/spreadsheets/d/1mSl7bseo2vcxDm0dUAOt4UJJTvBd1BvFtJMvBk7_POY/edit?usp=sharing" target="_blank" class="sheet-btn">
+  📊 View Log Sheet
+</a>
+ 
 </nav>
 
 <!-- ── Page header ──────────────────────────────────── -->
@@ -588,8 +600,10 @@
     <button type="button" class="btn-reset" onclick="resetForm()">Reset Form</button>
     <p class="submit-note">
       Entry will be saved to the BHDC downtime log sheet.<br>
-      All <span style="color:var(--red);font-weight:600;">★</span> required fields must be completed.
+      All <span style="color:var(--red);font-weight:600;">★</span> required fields must be completed.<br>
+      
     </p>
+    <span style="color:var(--navy);font-weight:600; font-size:8px; align-self: flex-end; margin-left: auto;"> All Rights Reserved © 2026 BHDC</span>
   </div>
 
 </form>
