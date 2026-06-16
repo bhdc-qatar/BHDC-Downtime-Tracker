@@ -1,0 +1,24 @@
+{
+  "name": "BHDC Downtime Tracker",
+  "short_name": "BHDC Tracker",
+  "description": "Pressure Test Pump & Well Control Equipment Failure Log",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B2A4A",
+  "theme_color": "#1B2A4A",
+  "icons": [
+    {
+      "src": "bhdc-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "bhdc-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

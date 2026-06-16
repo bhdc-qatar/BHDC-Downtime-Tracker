@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BHDC — Downtime Log Entry</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1B2A4A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BHDC Tracker">
+  <link rel="apple-touch-icon" href="bhdc-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset & tokens ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:       #1B2A4A;
+      --navy-light: #243659;
+      --orange:     #E8610A;
+      --orange-lt:  #F5A623;
+      --white:      #FFFFFF;
+      --bg:         #F0F4F8;
+      --surface:    #FFFFFF;
+      --border:     #D5DDE8;
+      --text:       #1A2233;
+      --muted:      #6B7A99;
+      --yellow-bg:  #FFFBEB;
+      --yellow-bd:  #F59E0B;
+      --blue-bg:    #EFF6FF;
+      --blue-bd:    #3B82F6;
+      --green-bg:   #F0FDF4;
+      --green-bd:   #22C55E;
+      --red:        #DC2626;
+      --radius:     8px;
+      --shadow:     0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ── Top nav bar ────────────────────────────────── */
+    .topbar {
+      background: var(--navy);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    }
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .topbar-logo img {
+      height: 38px;
+      filter: brightness(0) invert(1);
+    }
+    .topbar-divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(255,255,255,.2);
+    }
+    .topbar-title {
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .topbar-badge {
+      background: var(--orange);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: .03em;
+    }
+
+    /* ── Page header ────────────────────────────────── */
+    .page-header {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      padding: 36px 32px 32px;
+      border-bottom: 3px solid var(--orange);
+    }
+    .page-header h1 {
+      color: var(--white);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+    .page-header p {
+      color: rgba(255,255,255,.55);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    /* ── Main layout ────────────────────────────────── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    /* ── Card ───────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .card-header {
+      background: var(--navy);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-header .icon {
+      font-size: 15px;
+    }
+    .card-header h2 {
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .card-header .step {
+      margin-left: auto;
+      background: rgba(255,255,255,.12);
+      color: rgba(255,255,255,.7);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .card-body {
+      padding: 24px 24px 20px;
+    }
+
+    /* ── Grid ───────────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .col-span-2 { grid-column: span 2; }
+    .col-span-3 { grid-column: span 3; }
+
+    /* ── Field ──────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .field label .req {
+      color: var(--red);
+      font-size: 13px;
+      line-height: 1;
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: 13.5px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background: var(--white);
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(232,97,10,.1);
+    }
+    .field input.error,
+    .field select.error,
+    .field textarea.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(220,38,38,.08);
+    }
+    .field textarea { resize: vertical; min-height: 72px; }
+    .field select { cursor: pointer; }
+    .field .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .field .err-msg {
+      font-size: 11px;
+      color: var(--red);
+      display: none;
+    }
+    .field.has-error .err-msg { display: block; }
+
+    /* Field bg variants */
+    .field.required input,
+    .field.required select,
+    .field.required textarea { background: var(--yellow-bg); }
+    .field.conditional input,
+    .field.conditional select { background: var(--blue-bg); }
+    .field.auto input { background: var(--green-bg); color: #166534; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+    /* ── Divider ────────────────────────────────────── */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* ── Downtime display ───────────────────────────── */
+    .downtime-display {
+      background: var(--green-bg);
+      border: 1.5px solid var(--green-bd);
+      border-radius: 6px;
+      padding: 9px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: #166534;
+      text-align: center;
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .downtime-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #166534;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-top: 3px;
+    }
+
+    /* ── Legend ─────────────────────────────────────── */
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 12px 24px;
+      border-top: 1px solid var(--border);
+      background: #FAFBFD;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    /* ── Submit button ──────────────────────────────── */
+    .submit-wrap {
+      padding: 24px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn-submit {
+      background: var(--orange);
+      color: white;
+      border: none;
+      padding: 13px 32px;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: .02em;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .btn-submit:hover  { background: #CF5509; box-shadow: 0 4px 12px rgba(232,97,10,.35); }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled { background: #9CA3AF; cursor: not-allowed; box-shadow: none; }
+    .btn-reset {
+      background: transparent;
+      color: var(--muted);
+      border: 1.5px solid var(--border);
+      padding: 12px 20px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-reset:hover { border-color: var(--navy); color: var(--navy); }
+    .submit-note {
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Toast ──────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--navy);
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 8px 30px rgba(0,0,0,.25);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      max-width: 340px;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform .3s ease, opacity .3s ease;
+      z-index: 999;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { background: #166534; border-left: 4px solid #22C55E; }
+    #toast.error   { background: #7F1D1D; border-left: 4px solid #EF4444; }
+    #toast .toast-icon { font-size: 18px; flex-shrink: 0; }
+    #toast .toast-body { flex: 1; }
+    #toast .toast-title { font-weight: 700; margin-bottom: 2px; }
+    #toast .toast-msg   { font-size: 12px; opacity: .85; }
+
+    /* ── Spinner ────────────────────────────────────── */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: none;
+    }
+    .btn-submit.loading .spinner { display: block; }
+    .btn-submit.loading .btn-text { opacity: .7; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Section separator accent ───────────────────── */
+    .orange-bar {
+      height: 3px;
+      background: linear-gradient(90deg, var(--orange), var(--orange-lt));
+      border-radius: 0 0 3px 3px;
+    }
+
+    /* ── Responsive ─────────────────────────────────── */
+    @media (max-width: 640px) {
+      .topbar { padding: 0 16px; }
+      .page-header { padding: 24px 16px; }
+      .container { padding: 20px 12px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .col-span-2, .col-span-3 { grid-column: span 1; }
+      .card-body { padding: 16px; }
+      .submit-wrap { flex-direction: column; align-items: stretch; }
+      .topbar-badge { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Top nav ──────────────────────────────────────── -->
+<nav class="topbar">
+  <div class="topbar-logo">
+    <img src="bhdc-logo.png" alt="BHDC Logo" />
+    <div class="topbar-divider"></div>
+    <span class="topbar-title">Drilling Downtime Tracker</span>
+  </div>
+  <span class="topbar-badge">Log Entry</span>
+</nav>
+
+<!-- ── Page header ──────────────────────────────────── -->
+<div class="page-header">
+  <div style="max-width:860px;margin:0 auto;">
+    <h1>Equipment Failure &amp; Downtime Log</h1>
+    <p>Pressure Test Pump &amp; Well Control Equipment — complete all required fields and submit to record.</p>
+  </div>
+</div>
+
+<!-- ── Form ─────────────────────────────────────────── -->
+<div class="container">
+<form id="downtimeForm" novalidate>
+
+  <!-- SECTION 1: CLASSIFICATION -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">🗂</span>
+      <h2>Classification</h2>
+      <span class="step">01</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="field required" id="field-category">
+          <label>Equipment Category <span class="req">*</span></label>
+          <select id="category" name="category" onchange="handleCategoryChange()">
+            <option value="">— Select category —</option>
+            <option value="Pressure Test Pump">Pressure Test Pump</option>
+            <option value="Well Control Equipment">Well Control Equipment</option>
+          </select>
+          <span class="err-msg">Please select a category</span>
+        </div>
+        <div class="field required" id="field-rigNo">
+          <label>Rig Number <span class="req">*</span></label>
+          <select id="rigNo" name="rigNo">
+            <option value="">— Select rig —</option>
+            <option value="BHDC-67">BHDC-67</option>
+            <option value="BHDC-68">BHDC-68</option>
+            <option value="BHDC-117">BHDC-117</option>
+          </select>
+          <span class="err-msg">Rig number is required</span>
+        </div>
+        <div class="field conditional" id="field-eqpName">
+          <label>Equipment Name</label>
+          <input type="text" id="eqpName" name="eqpName" placeholder="e.g. Pump A / BOP Stack" />
+        </div>
+        <div class="field conditional" id="field-serialNo">
+          <label>Serial Number</label>
+          <input type="text" id="serialNo" name="serialNo" placeholder="e.g. SN-001" />
+        </div>
+      </div>
+
+      <!-- Equipment Type — WCE only -->
+      <div id="eqpTypeRow" style="display:none; margin-top:16px;">
+        <div class="field conditional" id="field-eqpType">
+          <label>Equipment Type <span class="req" id="eqpTypeReq" style="display:none;">*</span></label>
+          <select id="eqpType" name="eqpType">
+            <option value="">— Select equipment type —</option>
+            <option>BOP Stack</option>
+            <option>Choke Manifold</option>
+            <option>Kill Manifold</option>
+            <option>Accumulator Unit</option>
+            <option>Diverter System</option>
+            <option>Inside BOP</option>
+            <option>Drill String Float Valve</option>
+            <option>Annular Preventer</option>
+            <option>Ram Preventer</option>
+            <option>Choke &amp; Kill Line</option>
+            <option>Well Control Panel</option>
+            <option>Other</option>
+          </select>
+          <span class="err-msg">Please select equipment type</span>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#FEF9C3;border:1px solid #F59E0B;"></div> Required field</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#EFF6FF;border:1px solid #3B82F6;"></div> Conditional field</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#F0FDF4;border:1px solid #22C55E;"></div> Auto-calculated</div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: FAILURE DETAILS -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">⚠️</span>
+      <h2>Failure Details</h2>
+      <span class="step">02</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-3">
+        <div class="field required" id="field-failDT">
+          <label>Failure Date &amp; Time <span class="req">*</span></label>
+          <input type="datetime-local" id="failDT" name="failDT" onchange="calcDowntime()" />
+          <span class="err-msg">Required</span>
+        </div>
+        <div class="field required" id="field-restartDT">
+          <label>Restart Date &amp; Time <span class="req">*</span></label>
+          <input type="datetime-local" id="restartDT" name="restartDT" onchange="calcDowntime()" />
+          <span class="err-msg">Must be after failure time</span>
+        </div>
+        <div>
+          <div class="field auto">
+            <label>Downtime</label>
+          </div>
+          <div class="downtime-display" id="downtimeDisplay">—</div>
+          <div class="downtime-label">hours calculated</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid-2">
+        <div class="field required" id="field-severity">
+          <label>Severity <span class="req">*</span></label>
+          <select id="severity" name="severity">
+            <option value="">— Select —</option>
+            <option value="Major">Major</option>
+            <option value="Minor">Minor</option>
+          </select>
+          <span class="err-msg">Please select severity</span>
+        </div>
+        <div class="field required" id="field-status">
+          <label>Failure Status <span class="req">*</span></label>
+          <select id="status" name="status">
+            <option value="">— Select —</option>
+            <option value="Open">Open</option>
+            <option value="Closed">Closed</option>
+            <option value="Pending Parts">Pending Parts</option>
+          </select>
+          <span class="err-msg">Please select status</span>
+        </div>
+        <div class="field col-span-2">
+          <label>Failure Description <span class="req">*</span></label>
+          <textarea id="failDesc" name="failDesc" rows="3" placeholder="Describe what failed and how it was discovered…"></textarea>
+          <span class="err-msg">Please describe the failure</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: REPAIR INFORMATION -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">🔧</span>
+      <h2>Repair Information</h2>
+      <span class="step">03</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="field">
+          <label>Root Cause</label>
+          <input type="text" id="rootCause" name="rootCause" placeholder="e.g. Worn seals, calibration drift…" />
+        </div>
+        <div class="field">
+          <label>Parts Replaced</label>
+          <input type="text" id="parts" name="parts" placeholder="e.g. Hydraulic seal kit, O-rings…" />
+        </div>
+        <div class="field required" id="field-repairedBy">
+          <label>Repaired By <span class="req">*</span></label>
+          <input type="text" id="repairedBy" name="repairedBy" placeholder="Technician name" />
+          <span class="err-msg">Required</span>
+        </div>
+        <div class="field required" id="field-verifiedBy">
+          <label>Verified By <span class="req">*</span></label>
+          <input type="text" id="verifiedBy" name="verifiedBy" placeholder="Supervisor / engineer name" />
+          <span class="err-msg">Required</span>
+        </div>
+        <div class="field col-span-2">
+          <label>Remarks / Notes</label>
+          <textarea id="remarks" name="remarks" rows="2" placeholder="Any additional observations or follow-up actions…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="orange-bar"></div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="submit-wrap">
+    <button type="submit" class="btn-submit" id="submitBtn">
+      <div class="spinner"></div>
+      <span class="btn-text">Submit Log Entry</span>
+    </button>
+    <button type="button" class="btn-reset" onclick="resetForm()">Reset Form</button>
+    <p class="submit-note">
+      Entry will be saved to the BHDC downtime log sheet.<br>
+      All <span style="color:var(--red);font-weight:600;">★</span> required fields must be completed.
+    </p>
+  </div>
+
+</form>
+</div>
+
+<!-- ── Toast notification ────────────────────────────── -->
+<div id="toast">
+  <span class="toast-icon" id="toastIcon">✅</span>
+  <div class="toast-body">
+    <div class="toast-title" id="toastTitle"></div>
+    <div class="toast-msg"   id="toastMsg"></div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG — paste your Google Apps Script URL here ──
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQvVjUfXKecBFIVD38xo20Q1vXLv16YlLHEedzELdBTSv4P0qYJVef8JchdnmfXJZ1/exec";
+
+  // ── Category toggle ──────────────────────────────────
+  function handleCategoryChange() {
+    const cat = document.getElementById("category").value;
+    const row = document.getElementById("eqpTypeRow");
+    const req = document.getElementById("eqpTypeReq");
+    const isWCE = cat === "Well Control Equipment";
+    row.style.display = isWCE ? "block" : "none";
+    req.style.display  = isWCE ? "inline" : "none";
+    if (!isWCE) document.getElementById("eqpType").value = "";
+  }
+
+  // ── Downtime calculator ──────────────────────────────
+  function calcDowntime() {
+    const f = document.getElementById("failDT").value;
+    const r = document.getElementById("restartDT").value;
+    const display = document.getElementById("downtimeDisplay");
+    if (!f || !r) { display.textContent = "—"; return null; }
+    const diff = (new Date(r) - new Date(f)) / 3600000;
+    if (diff < 0) {
+      display.textContent = "⚠ Check dates";
+      display.style.color = "#DC2626";
+      return null;
+    }
+    display.style.color = "#166534";
+    display.textContent = diff.toFixed(2) + " hrs";
+    return parseFloat(diff.toFixed(2));
+  }
+
+  // ── Validation ───────────────────────────────────────
+  function validate() {
+    let valid = true;
+    const required = [
+      ["category",   "Please select a category"],
+      ["rigNo",      "Rig number is required"],
+      ["failDT",     "Failure date & time is required"],
+      ["restartDT",  "Restart date & time is required"],
+      ["severity",   "Please select severity"],
+      ["status",     "Please select status"],
+      ["failDesc",   "Please describe the failure"],
+      ["repairedBy", "Repaired by is required"],
+      ["verifiedBy", "Verified by is required"],
+    ];
+    // Clear all errors first
+    document.querySelectorAll(".field").forEach(f => f.classList.remove("has-error"));
+    document.querySelectorAll("input, select, textarea").forEach(el => el.classList.remove("error"));
+
+    required.forEach(([id, msg]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (!el.value.trim()) {
+        el.classList.add("error");
+        const wrapper = document.getElementById("field-" + id);
+        if (wrapper) {
+          wrapper.classList.add("has-error");
+          const errEl = wrapper.querySelector(".err-msg");
+          if (errEl) errEl.textContent = msg;
+        }
+        valid = false;
+      }
+    });
+
+    // WCE equipment type
+    const cat = document.getElementById("category").value;
+    if (cat === "Well Control Equipment") {
+      const et = document.getElementById("eqpType");
+      if (!et.value) {
+        et.classList.add("error");
+        const wrapper = document.getElementById("field-eqpType");
+        if (wrapper) { wrapper.classList.add("has-error"); }
+        valid = false;
+      }
+    }
+
+    // Date order check
+    const dtHours = calcDowntime();
+    if (dtHours !== null && dtHours < 0) {
+      document.getElementById("restartDT").classList.add("error");
+      const wrapper = document.getElementById("field-restartDT");
+      if (wrapper) {
+        wrapper.classList.add("has-error");
+        wrapper.querySelector(".err-msg").textContent = "Must be after failure time";
+      }
+      valid = false;
+    }
+
+    if (!valid) {
+      const firstErr = document.querySelector(".error");
+      if (firstErr) firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    return valid;
+  }
+
+  // ── Show toast ───────────────────────────────────────
+  function showToast(type, title, msg) {
+    const t = document.getElementById("toast");
+    document.getElementById("toastIcon").textContent  = type === "success" ? "✅" : "❌";
+    document.getElementById("toastTitle").textContent = title;
+    document.getElementById("toastMsg").textContent   = msg;
+    t.className = "show " + type;
+    setTimeout(() => { t.className = ""; }, 5000);
+  }
+
+  // ── Reset ────────────────────────────────────────────
+  function resetForm() {
+    document.getElementById("downtimeForm").reset();
+    document.getElementById("downtimeDisplay").textContent = "—";
+    document.getElementById("downtimeDisplay").style.color = "#166534";
+    document.getElementById("eqpTypeRow").style.display = "none";
+    document.querySelectorAll(".field").forEach(f => f.classList.remove("has-error"));
+    document.querySelectorAll("input, select, textarea").forEach(el => el.classList.remove("error"));
+  }
+
+  // ── Submit ───────────────────────────────────────────
+  document.getElementById("downtimeForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const dtHours = calcDowntime();
+    const btn = document.getElementById("submitBtn");
+    btn.classList.add("loading");
+    btn.disabled = true;
+
+    // Format datetime to readable string
+    function fmtDT(val) {
+      if (!val) return "";
+      return val.replace("T", " ");
+    }
+
+    const payload = {
+      category:    document.getElementById("category").value,
+      rigNo:       document.getElementById("rigNo").value.trim(),
+      eqpName:     document.getElementById("eqpName").value.trim(),
+      serialNo:    document.getElementById("serialNo").value.trim(),
+      eqpType:     document.getElementById("eqpType").value,
+      failDT:      fmtDT(document.getElementById("failDT").value),
+      restartDT:   fmtDT(document.getElementById("restartDT").value),
+      dtHours:     dtHours,
+      severity:    document.getElementById("severity").value,
+      status:      document.getElementById("status").value,
+      failDesc:    document.getElementById("failDesc").value.trim(),
+      rootCause:   document.getElementById("rootCause").value.trim(),
+      parts:       document.getElementById("parts").value.trim(),
+      repairedBy:  document.getElementById("repairedBy").value.trim(),
+      verifiedBy:  document.getElementById("verifiedBy").value.trim(),
+      remarks:     document.getElementById("remarks").value.trim(),
+      timestamp:   new Date().toLocaleString(),
+    };
+
+    try {
+      // Google Apps Script requires form-encoded data with no-cors
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(payload));
+
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData,
+      });
+
+      // no-cors always returns opaque response — we assume success if no network error
+      showToast("success", "Entry logged successfully",
+        `${payload.category} — ${payload.rigNo} — ${dtHours} hrs downtime`);
+      resetForm();
+    } catch (err) {
+      showToast("error", "Submission failed", "Check your internet connection and try again.");
+      console.error(err);
+    } finally {
+      btn.classList.remove("loading");
+      btn.disabled = false;
+    }
+  });
+</script>
+<script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .then(() => console.log("BHDC SW registered"))
+          .catch(err => console.warn("SW failed:", err));
+      });
+    }
+  </script>
+</body>
+</html>
