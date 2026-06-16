@@ -1,9 +1,9 @@
 const CACHE = "bhdc-tracker-v2";
 const ASSETS = [
-  "./",
-  "./index.html",
-  "./bhdc-logo.png",
-  "./manifest.json",
+  "/BHDC-Downtime-Tracker/",
+  "/BHDC-Downtime-Tracker/index.html",
+  "/BHDC-Downtime-Tracker/bhdc-logo.png",
+  "/BHDC-Downtime-Tracker/manifest.json",
 ];
 
 // Install — cache core assets
